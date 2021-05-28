@@ -31,8 +31,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(getSupportLoaderManager().getLoader(0)!=null){
-            getSupportLoaderManager().initLoader(0,null,this);
+       // if(getSupportLoaderManager().getLoader(0)!=null){
+       //     getSupportLoaderManager().initLoader(0,null,this);
+       // }
+
+        if(LoaderManager.getInstance(this) != null){
+            LoaderManager.getInstance(this).initLoader(0, null, this);
         }
 
         inputLibro = findViewById(R.id.inputLibro);

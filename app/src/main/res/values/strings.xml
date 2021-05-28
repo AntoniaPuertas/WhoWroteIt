@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">WhoWroteIt</string>
+    <string name="instrucciones">Escribe el nombre de un libro para encontrar el autor</string>
+    <string name="buscar_libro">Buscar Libro</string>
+    <string name="titulo_libro">Título del libro</string>
+    <string name="sin_resultados">Sin resultados</string>
+    <string name="cargando">Cargando...</string>
+    <string name="sin_texto">Introduce un texto para la búsqueda</string>
+    <string name="sin_conexion">No hay conexión de red</string>
+
+</resources>

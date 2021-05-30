@@ -1,6 +1,10 @@
 package com.toni.whowroteit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -11,7 +15,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<String>{
 
     EditText inputLibro;
     TextView txtLibro;
@@ -21,6 +30,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+       // if(getSupportLoaderManager().getLoader(0)!=null){
+       //     getSupportLoaderManager().initLoader(0,null,this);
+       // }
+
+        if(LoaderManager.getInstance(this) != null){
+            LoaderManager.getInstance(this).initLoader(0, null, this);
+        }
 
         inputLibro = findViewById(R.id.inputLibro);
         txtLibro = findViewById(R.id.txtLibro);
@@ -47,7 +64,11 @@ public class MainActivity extends AppCompatActivity {
 
         //se realiza la peticion si hay conexion y la cadena de búsqueda no está vacía
         if(networkInfo != null && networkInfo.isConnected() && cadenaBusqueda.length() != 0){
-            new FetchBook(txtLibro, txtAutor).execute(cadenaBusqueda);
+            //new FetchBook(txtLibro, txtAutor).execute(cadenaBusqueda);
+            Bundle queryBundle = new Bundle();
+            queryBundle.putString("queryString", cadenaBusqueda);
+            getSupportLoaderManager().restartLoader(0, queryBundle, this);
+
             txtAutor.setText("");
             txtLibro.setText(R.string.cargando);
         }else{
@@ -63,4 +84,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @NonNull
+    @NotNull
+    @Override
+    public Loader<String> onCreateLoader(int id, @Nullable @org.jetbrains.annotations.Nullable Bundle args) {
+        String queryString = "";
+
+        if (args != null) {
+            queryString = args.getString("queryString");
+        }
+
+        return new BookLoader(this, queryString);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull @NotNull Loader<String> loader, String data) {
+        try {
+            //convierte el string en un objeto json
+            JSONObject jsonObject = new JSONObject(data);
+            //convierte el objeto json en un array
+            JSONArray itemsArray = jsonObject.getJSONArray("items");
+            int i = 0;
+            String titulo = null;
+            String autor = null;
+            //busca en el array las entradas con titulo y autor
+            while (i < itemsArray.length() && autor == null && titulo == null){
+                JSONObject libro = itemsArray.getJSONObject(i);
+                JSONObject volumenInfo = libro.getJSONObject("volumeInfo");
+                JSONArray autores = volumenInfo.getJSONArray("authors");
+                //comprueba si existe titulo y autor en este item
+                try {
+                    titulo = volumenInfo.getString("title");
+                    autor = autores.getString(0);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                //actualiza el contador al siguiente item
+                i++;
+            }
+            if(titulo != null && autor != null){
+                txtLibro.setText(titulo);
+                txtAutor.setText(autor);
+            }else{
+                txtLibro.setText(R.string.sin_resultados);
+                txtAutor.setText("");
+            }
+
+        }catch(JSONException e){
+            txtLibro.setText(R.string.sin_resultados);
+            txtAutor.setText("");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull @NotNull Loader<String> loader) {
+
+    }
 }

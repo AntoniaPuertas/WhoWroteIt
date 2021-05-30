@@ -14,8 +14,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,19 +29,24 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       // if(getSupportLoaderManager().getLoader(0)!=null){
-       //     getSupportLoaderManager().initLoader(0,null,this);
-       // }
+//        if(getSupportLoaderManager().getLoader(0)!=null){
+//            getSupportLoaderManager().initLoader(0,null,this);
+//        }
 
-        if(LoaderManager.getInstance(this) != null){
+        if(getLoaderManager().getLoader(0) != null){
             LoaderManager.getInstance(this).initLoader(0, null, this);
         }
+
 
         inputLibro = findViewById(R.id.inputLibro);
         txtLibro = findViewById(R.id.txtLibro);
         txtAutor = findViewById(R.id.txtAutor);
 
-
+        if(savedInstanceState != null){
+            inputLibro.setText(savedInstanceState.getString("input"));
+            txtLibro.setText(savedInstanceState.getString("libro"));
+            txtAutor.setText(savedInstanceState.getString("autor"));
+        }
     }
 
     public void buscarLibro(View view){
@@ -67,8 +70,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             //new FetchBook(txtLibro, txtAutor).execute(cadenaBusqueda);
             Bundle queryBundle = new Bundle();
             queryBundle.putString("queryString", cadenaBusqueda);
-            getSupportLoaderManager().restartLoader(0, queryBundle, this);
-
+            //getSupportLoaderManager().restartLoader(0, queryBundle, this);
+            LoaderManager.getInstance(this).initLoader(0, queryBundle, this);
             txtAutor.setText("");
             txtLibro.setText(R.string.cargando);
         }else{
@@ -85,9 +88,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
     @NonNull
-    @NotNull
     @Override
-    public Loader<String> onCreateLoader(int id, @Nullable @org.jetbrains.annotations.Nullable Bundle args) {
+    public Loader<String> onCreateLoader(int id,  Bundle args) {
         String queryString = "";
 
         if (args != null) {
@@ -98,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onLoadFinished(@NonNull @NotNull Loader<String> loader, String data) {
+    public void onLoadFinished(@NonNull Loader<String> loader, String data) {
         try {
             //convierte el string en un objeto json
             JSONObject jsonObject = new JSONObject(data);
@@ -138,7 +140,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onLoaderReset(@NonNull @NotNull Loader<String> loader) {
+    public void onLoaderReset(@NonNull Loader<String> loader) {
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        bundle.putString("input", inputLibro.getText().toString());
+        bundle.putString("libro", txtLibro.getText().toString());
+        bundle.putString("autor", txtAutor.getText().toString());
 
     }
 }
